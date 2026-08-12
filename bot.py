@@ -10,7 +10,7 @@ from telebot import types, custom_filters
 from telebot.handler_backends import State, StatesGroup
 from telebot.storage import StateMemoryStorage
 
-from config import BOT_TOKEN
+from config import BOT_TOKEN, validate_config, get_config_info
 from database import db
 
 
@@ -1058,9 +1058,24 @@ def main():
     print("🚗 Telegram-бот автосервиса «ПрофиСервис» запускается...")
     print("=" * 70)
     
+    # Проверка конфигурации
+    if not validate_config():
+        print("\n❌ Бот не может быть запущен из-за ошибок конфигурации")
+        print("📝 Исправьте ошибки в файле .env и перезапустите бота")
+        return
+    
+    # Выводим информацию о конфигурации (без чувствительных данных)
+    config_info = get_config_info()
+    print("\n📋 Информация о конфигурации:")
+    print(f"   • BOT_TOKEN: {'✅ Установлен' if config_info['bot_token_set'] else '❌ Не установлен'}")
+    print(f"   • DATABASE_URL: {'✅ Установлен' if config_info['database_url_set'] else '❌ Не установлен'}")
+    print(f"   • Тип БД: {'Локальная' if config_info['is_local_db'] else 'Облачная'}")
+    if config_info.get('database_url_masked'):
+        print(f"   • Строка подключения: {config_info['database_url_masked']}")
+    
     # Проверяем подключение к БД
     if db.test_connection():
-        print("✅ Подключение к базе данных успешно")
+        print("\n✅ Подключение к базе данных успешно")
         
         # Статистика
         stats = db.get_stats()
@@ -1073,7 +1088,7 @@ def main():
             print("\n⚠️  ВНИМАНИЕ: В базе нет услуг!")
             print("   Запустите: python add_autoservice_services.py")
     else:
-        print("❌ Не удалось подключиться к базе данных")
+        print("\n❌ Не удалось подключиться к базе данных")
         print("   Проверьте настройки в файле .env")
         return
     
@@ -1082,9 +1097,14 @@ def main():
     print("=" * 70 + "\n")
     
     # Запуск бота
-    bot.infinity_polling(timeout=60, long_polling_timeout=60)
+    try:
+        bot.infinity_polling(timeout=60, long_polling_timeout=60)
+    except KeyboardInterrupt:
+        print("\n👋 Бот остановлен")
+    except Exception as e:
+        print(f"\n❌ Ошибка при работе бота: {e}")
+        raise
 
 
 if __name__ == '__main__':
     main()
-
