@@ -33,7 +33,7 @@ def get_db_connection_string() -> str:
         return DATABASE_URL
     
     if all([DB_HOST, DB_NAME, DB_USER, DB_PASSWORD]):
-        return f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}?sslmode=require"
+        return f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
     
     raise ValueError(
         "Не заданы параметры подключения к БД. "
